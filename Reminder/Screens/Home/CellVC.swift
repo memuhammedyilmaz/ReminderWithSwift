@@ -6,9 +6,12 @@ import SnapKit
 class CellVC: UICollectionViewCell {
     
     let containerView = UIView()
+    var reminderId: UUID?
     let titleLabel = UILabel()
     let subtitleLabel = UILabel()
     let checkButton = UIButton()
+    
+    var onReminderTapped: ((UUID) -> Void)?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -42,6 +45,7 @@ class CellVC: UICollectionViewCell {
         }
         
         // Check Button
+        checkButton.addTarget(self, action: #selector(checkReminder), for: .touchUpInside)
         checkButton.backgroundColor = .clear
         containerView.addSubview(checkButton)
         checkButton.snp.makeConstraints { make in
@@ -57,20 +61,30 @@ class CellVC: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure(title: String, subtitle: String, isChecked: Bool) {
-        titleLabel.text = title
-        subtitleLabel.text = subtitle
-        
-        if isChecked {
-            checkButton.setImage(UIImage(systemName: "checkmark"), for: .normal)
-            checkButton.tintColor = .white
-            checkButton.backgroundColor = .black
-            containerView.layer.borderColor = UIColor.lightGray.cgColor
-            titleLabel.layer.opacity = 0.5
-            subtitleLabel.layer.opacity = 0.5
-        } else {
-            checkButton.setTitle("", for: .normal)
-        }
+    func configure(id: UUID, title: String, subtitle: String, isChecked: Bool) {
+           reminderId = id
+           titleLabel.text = title
+           subtitleLabel.text = subtitle
+           
+           if isChecked {
+               checkButton.setImage(UIImage(systemName: "checkmark"), for: .normal)
+               checkButton.tintColor = .white
+               checkButton.backgroundColor = .black
+               containerView.layer.borderColor = UIColor.lightGray.cgColor
+               titleLabel.layer.opacity = 0.5
+               subtitleLabel.layer.opacity = 0.5
+           } else {
+               checkButton.setImage(nil, for: .normal)
+               checkButton.backgroundColor = .clear
+               containerView.layer.borderColor = UIColor.black.cgColor
+               titleLabel.layer.opacity = 1.0
+               subtitleLabel.layer.opacity = 1.0
+           }
+       }
+    
+    @objc private func checkReminder() {
+        guard let id = reminderId else { return }
+        onReminderTapped?(id)
     }
 }
   

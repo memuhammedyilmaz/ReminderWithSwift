@@ -8,46 +8,60 @@
 import Foundation
 
 protocol HomeInputProtocol: AnyObject {
-    func addReminders()
+    func reloadCollectionView()
 }
 
 class HomeVM {
-    weak var outputDelegate: HomeOutputProtocol?
-    weak var inputDelegate: HomeInputProtocol?
     
-   
+    private let remindersKey = "remindersKey"
+    var reminders: [Reminder] = [] {
+        didSet {
+            saveRemindersToUserDefaults()
+        }
+    }
+    
+    weak var inputDelegate: HomeInputProtocol?
+    weak var outputDelegate: HomeOutputProtocol?
     
     init() {
+        loadRemindersFromUserDefaults()
         inputDelegate = self
     }
+    
+    func saveRemindersToUserDefaults() {
+        if let data = try? JSONEncoder().encode(reminders) {
+            UserDefaults.standard.set(data, forKey: remindersKey)
+        }
+    }
+    
+    func loadRemindersFromUserDefaults() {
+        if let data = UserDefaults.standard.data(forKey: remindersKey),
+           let savedReminders = try? JSONDecoder().decode([Reminder].self, from: data) {
+            reminders = savedReminders
+        }
+    }
+    
+    func getGreetingMessage() -> String {
+            let hour = Calendar.current.component(.hour, from: Date())
+            switch hour {
+            case 6..<12:
+                return "Good Morning"
+            case 12..<18:
+                return "Good Afternoon"
+            case 18..<22:
+                return "Good Evening"
+            default:
+                return "Good Night"
+            }
+        }
 }
+
+
 
 extension HomeVM: HomeInputProtocol {
-    func addReminders() {
-        let reminders = [
-            Reminder(title: "Buy groceries", subtitle: "Milk, Bread, Eggs"),
-            Reminder(title: "Doctor's appointment", subtitle: "10 AM at the clinic"),
-            Reminder(title: "Meeting with John", subtitle: "Discuss project updates"),
-            Reminder(title: "Buy groceries", subtitle: "Milk, Bread, Eggs"),
-            Reminder(title: "Doctor's appointment", subtitle: "10 AM at the clinic"),
-            Reminder(title: "Meeting with John", subtitle: "Discuss project updates"),
-            Reminder(title: "Buy groceries", subtitle: "Milk, Bread, Eggs"),
-            Reminder(title: "Doctor's appointment", subtitle: "10 AM at the clinic"),
-            Reminder(title: "Meeting with John", subtitle: "Discuss project updates"),
-            Reminder(title: "Buy groceries", subtitle: "Milk, Bread, Eggs"),
-            Reminder(title: "Doctor's appointment", subtitle: "10 AM at the clinic"),
-            Reminder(title: "Meeting with John", subtitle: "Discuss project updates"),
-            Reminder(title: "Buy groceries", subtitle: "Milk, Bread, Eggs"),
-            Reminder(title: "Doctor's appointment", subtitle: "10 AM at the clinic"),
-            Reminder(title: "Meeting with John", subtitle: "Discuss project updates")]
-        
+    func reloadCollectionView() {
         outputDelegate?.listReminders(reminders: reminders)
     }
-    func checkReminder() {
-    }
+    
+    
 }
-
-
-
-            
-            

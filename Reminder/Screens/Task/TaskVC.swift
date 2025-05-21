@@ -8,8 +8,9 @@
 import UIKit
 import SnapKit
 
-import UIKit
-import SnapKit
+protocol TaskOutputProtocol: AnyObject {
+    func didAddReminder(_ reminder: Reminder)
+}
 
 class TaskVC: UIViewController {
     
@@ -23,18 +24,30 @@ class TaskVC: UIViewController {
     private let timePickerLogo = UIImageView()
     private let textField = UITextField()
     
+    private let homeVM: HomeVM = .init()
+    
+    var dismissCallback: (() -> Void)?
+    
+    weak var delegate: TaskOutputProtocol?
+   
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
-        
-        
-        setupAddReminderView()
+        view.backgroundColor = UIColor.white.withAlphaComponent(0.98)
+        //view.backgroundColor = .clear
+              view.layer.cornerRadius = 16
+              view.clipsToBounds = true
+              setupAddReminderView()
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleBackgroundTap))
+            tapGesture.cancelsTouchesInView = false
+            view.addGestureRecognizer(tapGesture)
     }
+    
+    
     
     private func setupAddReminderView() {
         // Container view
-        addReminderView.backgroundColor = .clear
+        addReminderView.backgroundColor = .white
         addReminderView.layer.borderWidth = 1
         addReminderView.layer.cornerRadius = 8
         view.addSubview(addReminderView)
@@ -138,7 +151,8 @@ class TaskVC: UIViewController {
         }
             
         
-        // Configure the add button
+        // Save Button
+        addButton.addTarget(self, action: #selector(handleAddReminder), for: .touchUpInside)
         addButton.setTitle("Save", for: .normal)
         addButton.backgroundColor = .black
         addButton.setTitleColor(.white, for: .normal)
@@ -151,11 +165,29 @@ class TaskVC: UIViewController {
             make.width.equalTo(64)
             make.height.equalTo(32)
         }
-        
-        
     }
     
+    @objc private func handleAddReminder() {
+        let newReminder = Reminder(id: UUID.init(),title: textField.text ?? "", time: timePicker.date, day: datePicker.date ,checked: false)
+           homeVM.reminders.append(newReminder)
+    
+           delegate?.didAddReminder(newReminder)
+       
+           dismiss(animated: true) {
+               self.dismissCallback?()
+           }
+       }
+    
+    @objc private func handleBackgroundTap(_ sender: UITapGestureRecognizer) {
+        let location = sender.location(in: view)
+        if !addReminderView.frame.contains(location) {
+            dismiss(animated: true) {
+                self.dismissCallback?()
+            }
+        }
+    }
 }
+
 
 #Preview {
     TaskVC()

@@ -12,10 +12,20 @@ protocol HomeOutputProtocol: AnyObject {
     func listReminders(reminders: [Reminder])
 }
 
-class HomeVC: UIViewController {
+
+class HomeVC: UIViewController, TaskOutputProtocol {
+    
+    func didAddReminder(_ reminder: Reminder) {
+           homeVM.reminders.append(reminder)
+           listReminders(reminders: homeVM.reminders)
+    }
+    
+    private let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
     
     private let homeVM: HomeVM = .init()
-    private var reminders: [Reminder] = []
+    
+    var reminderArray: [Reminder] = []
+    
     
     let navigationBar = UINavigationBar()
     let nameLabel = UILabel()
@@ -26,7 +36,8 @@ class HomeVC: UIViewController {
     let addButton = UIButton()
     let daysSliderView = DaysVC()
     
-    
+    var dateTimeString: String = "Good Morning"
+    var name: String = "Muhammed"
     
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         let layout = UICollectionViewFlowLayout()
@@ -48,13 +59,14 @@ class HomeVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
+        collectionView.reloadData()
+        homeVM.reloadCollectionView()
+        dateTimeString = homeVM.getGreetingMessage()
         homeVM.outputDelegate = self
-        homeVM.inputDelegate?.addReminders()
         
-        
+        listReminders(reminders: homeVM.reminders)
         
         addButton.addTarget(self, action: #selector(addButtonTapped), for: .touchUpInside)
-
         
         
         // Navigation Bar
@@ -73,7 +85,7 @@ class HomeVC: UIViewController {
         }
         
         // Name Label
-        nameLabel.text = "Good Morning Muhammed"
+        nameLabel.text = "\(dateTimeString) \(name)"
         nameLabel.font = UIFont(name: "Inter-SemiBold", size: 20) ?? UIFont.systemFont(ofSize: 20, weight: .semibold)
         self.view.addSubview(nameLabel)
         
@@ -139,31 +151,47 @@ class HomeVC: UIViewController {
             make.trailing.equalToSuperview().inset(24)
             make.bottom.equalToSuperview().inset(32)
         }
-        
-       
-        
     }
     
     @objc private func addButtonTapped() {
-        let addTaskVC = TaskVC()
-        addTaskVC.modalPresentationStyle = .overCurrentContext
-        present(addTaskVC, animated: true, completion: nil)
+            let taskVC = TaskVC()
+            taskVC.delegate = self
+            taskVC.modalPresentationStyle = .overCurrentContext
+            present(taskVC, animated: true, completion: nil)
         }
+
 }
 
 extension HomeVC: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        reminders.count
+        //homeVM.reminders.count
+        return reminderArray.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ReminderCell", for: indexPath) as? CellVC else {
             return UICollectionViewCell()
         }
-        let title = reminders[indexPath.row].title
-        let subtitle = reminders[indexPath.row].subtitle
-        let isChecked = indexPath.row % 2 == 0
-        cell.configure(title: title, subtitle: subtitle, isChecked: isChecked)
+        let reminder = reminderArray[indexPath.row]
+        let title = reminder.title
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm"
+        let timeString = dateFormatter.string(from: reminder.time)
+        let subtitle = "Created at: \(timeString)"
+        let isChecked = reminder.checked
+
+        
+        cell.configure(id: reminder.id, title: title, subtitle: subtitle, isChecked: isChecked)
+        cell.onReminderTapped = { [weak self] id in
+            guard let self = self else { return }
+            if let index = self.reminderArray.firstIndex(where: { $0.id == id }) {
+                self.reminderArray[index].checked.toggle()
+                collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
+            }
+        }
+
         return cell
     }
     
@@ -172,16 +200,14 @@ extension HomeVC: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout
     }
 }
 
-
-
-
 extension HomeVC: HomeOutputProtocol {
     func listReminders(reminders: [Reminder]) {
-        self.reminders = reminders
+        self.reminderArray = reminders
+        print("Reminders: \(reminderArray)")
         collectionView.reloadData()
     }
+   
 }
-
 
 
 #Preview {

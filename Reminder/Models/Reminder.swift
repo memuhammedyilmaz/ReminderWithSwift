@@ -7,7 +7,14 @@
 
 import Foundation
 
-struct Reminder {
+struct Reminder: Codable, CustomStringConvertible {
+    let id: UUID
     let title: String
-    let subtitle: String
+    let time: Date
+    let day : Date
+    var checked: Bool
+
+    var description: String {
+        return "Reminder(id: \(id), title: \(title), time: \(time), day: \(day), checked: \(checked))"
+    }
 }
