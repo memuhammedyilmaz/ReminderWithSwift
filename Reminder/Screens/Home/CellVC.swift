@@ -1,22 +1,17 @@
 import UIKit
 import SnapKit
 
-
-
 class CellVC: UICollectionViewCell {
-    
     let containerView = UIView()
     var reminderId: UUID?
     let titleLabel = UILabel()
-    let subtitleLabel = UILabel()
+    let complitedCheckedLabel = UILabel()
     let checkButton = UIButton()
-    
     var onReminderTapped: ((UUID) -> Void)?
-    
+    private let homeVM: HomeVM = .init()
+
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
-        // Container View
         containerView.backgroundColor = .white
         containerView.layer.cornerRadius = 8
         containerView.layer.borderWidth = 1
@@ -25,8 +20,7 @@ class CellVC: UICollectionViewCell {
         containerView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-        
-        // Title Label
+
         titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         containerView.addSubview(titleLabel)
         titleLabel.snp.makeConstraints { make in
@@ -34,17 +28,15 @@ class CellVC: UICollectionViewCell {
             make.centerY.equalToSuperview()
             make.trailing.equalToSuperview().offset(-16)
         }
-        
-        // Subtitle Label
-        subtitleLabel.font = UIFont.systemFont(ofSize: 10, weight: .light)
-        containerView.addSubview(subtitleLabel)
-        subtitleLabel.snp.makeConstraints { make in
+
+        complitedCheckedLabel.font = UIFont.systemFont(ofSize: 10, weight: .light)
+        containerView.addSubview(complitedCheckedLabel)
+        complitedCheckedLabel.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(16)
             make.top.equalTo(titleLabel.snp.bottom).offset(1)
             make.trailing.equalToSuperview().offset(-16)
         }
-        
-        // Check Button
+
         checkButton.addTarget(self, action: #selector(checkReminder), for: .touchUpInside)
         checkButton.backgroundColor = .clear
         containerView.addSubview(checkButton)
@@ -56,35 +48,40 @@ class CellVC: UICollectionViewCell {
         checkButton.layer.cornerRadius = 16
         checkButton.layer.borderWidth = 2.5
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    func configure(id: UUID, title: String, subtitle: String, isChecked: Bool) {
-           reminderId = id
-           titleLabel.text = title
-           subtitleLabel.text = subtitle
-           
-           if isChecked {
-               checkButton.setImage(UIImage(systemName: "checkmark"), for: .normal)
-               checkButton.tintColor = .white
-               checkButton.backgroundColor = .black
-               containerView.layer.borderColor = UIColor.lightGray.cgColor
-               titleLabel.layer.opacity = 0.5
-               subtitleLabel.layer.opacity = 0.5
-           } else {
-               checkButton.setImage(nil, for: .normal)
-               checkButton.backgroundColor = .clear
-               containerView.layer.borderColor = UIColor.black.cgColor
-               titleLabel.layer.opacity = 1.0
-               subtitleLabel.layer.opacity = 1.0
-           }
-       }
-    
+
+    func configure(id: UUID, title: String, complitedChecked: String, isChecked: Bool) {
+        reminderId = id
+        titleLabel.text = title
+        complitedCheckedLabel.text = complitedChecked
+
+        if isChecked {
+            checkButton.setImage(UIImage(systemName: "checkmark"), for: .normal)
+            checkButton.tintColor = .white
+            checkButton.backgroundColor = .black
+            containerView.layer.borderColor = UIColor.lightGray.cgColor
+            titleLabel.layer.opacity = 0.5
+            complitedCheckedLabel.layer.opacity = 0.5
+
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "HH:mm"
+            let currentTime = dateFormatter.string(from: Date())
+            complitedCheckedLabel.text = "Completed: \(currentTime)"
+        } else {
+            checkButton.setImage(nil, for: .normal)
+            checkButton.backgroundColor = .clear
+            containerView.layer.borderColor = UIColor.black.cgColor
+            titleLabel.layer.opacity = 1.0
+            complitedCheckedLabel.layer.opacity = 1.0
+        }
+    }
+
     @objc private func checkReminder() {
         guard let id = reminderId else { return }
+        homeVM.toggleCheck(for: id)
         onReminderTapped?(id)
     }
 }
-  

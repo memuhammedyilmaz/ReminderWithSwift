@@ -7,12 +7,13 @@
 
 import Foundation
 
-struct Reminder: Codable, CustomStringConvertible {
+struct Reminder: Codable {
     let id: UUID
     let title: String
     let time: Date
     let day : Date
     var checked: Bool
+    var completedTime: String? 
 
     var description: String {
         return "Reminder(id: \(id), title: \(title), time: \(time), day: \(day), checked: \(checked))"

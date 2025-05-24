@@ -9,7 +9,6 @@ import UIKit
 import SnapKit
 
 class DaysVC: UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
-
     private let collectionView: UICollectionView
     private let dateFormatter: DateFormatter
     private let visibleItems = 5
@@ -23,7 +22,6 @@ class DaysVC: UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLa
         self.dateFormatter = DateFormatter()
         self.dateFormatter.dateFormat = "d MMM"
         super.init(frame: frame)
-
         setupCollectionView()
     }
 
@@ -76,16 +74,12 @@ class DayCell: UICollectionViewCell {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-
-        // Configure the date label
         dateLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         dateLabel.textAlignment = .center
         contentView.addSubview(dateLabel)
         dateLabel.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-
-        // Make the cell circular
         contentView.layer.cornerRadius = frame.size.width / 2
         contentView.layer.masksToBounds = true
     }
